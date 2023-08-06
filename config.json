@@ -1,0 +1,189 @@
+{
+  "command_prefix": "-",
+  "channels": {
+    "search": 1137866556446097490,
+    "misc": 1137866573697269790,
+    "mod": 1137866748960460900,
+    "match": 1137866584245940455
+  },
+  "stages": [
+    {
+      "name": "Battlefield",
+      "emote": "<:bf:1137821338392862744>",
+      "thumbnail": "https://cdn.discordapp.com/attachments/845292400440377374/861081456619814912/Battlefield_Preview.png",
+      "is_starter": true
+    },
+    {
+      "name": "Final Destination",
+      "emote": "<:fd:1137821339760201728>",
+      "thumbnail": "https://cdn.discordapp.com/attachments/845292400440377374/861081454724120576/Final_Destination_Preview.png",
+      "is_starter": true
+    },
+    {
+      "name": "Lylat Cruise",
+      "emote": "<:lc:1137819855962255470>",
+      "thumbnail": "https://cdn.discordapp.com/attachments/845292400440377374/861081448805826560/Lylat_Preview.png",
+      "is_starter": true
+    },
+    {
+      "name": "Pokemon Stadium 1",
+      "emote": "<:ps1:1137820585884389487>",
+      "thumbnail": "https://cdn.discordapp.com/attachments/845292400440377374/861081446424510474/PS1_Preview.png",
+      "is_starter": false
+    },
+    {
+      "name": "Smashville",
+      "emote": "<:sv:1137820587666972802>",
+      "thumbnail": "https://cdn.discordapp.com/attachments/845292400440377374/861081452766298142/Smashville_Preview.png",
+      "is_starter": true
+    },
+    {
+      "name": "Yoshi's Island",
+      "emote": "<:yi:1137820588442919045>",
+      "thumbnail": "https://cdn.discordapp.com/attachments/845292400440377374/861081450505830420/Yoshis_Preview.png",
+      "is_starter": true
+    }
+  ],
+  "characters": [
+    {
+      "emote": "<:DiddyKongHeadSSBB:1137812496640647218>",
+      "strings": ["diddy", "diddy_kong"]
+    },
+    {
+      "emote": "<:FalcoHeadSSBB:1137812497517248604>",
+      "strings": ["falco"]
+    },
+    {
+      "emote": "<:FoxHeadSSBB:1137812499379539978>",
+      "strings": ["fox"]
+    },
+    {
+      "emote": "<:IceClimbersHeadSSBB:1137812500243554364>",
+      "strings": ["ice_climbers", "ics", "ic"]
+    },
+    {
+      "emote": "<:KirbyHeadSSBB:1137812501392789596>",
+      "strings": ["kirby"]
+    },
+    {
+      "emote": "<:LucarioHeadSSBB:1137816338711203892>",
+      "strings": ["lucario"]
+    },
+    {
+      "emote": "<:MarthHeadSSBB:1137816340279861348>",
+      "strings": ["marth"]
+    },
+    {
+      "emote": "<:MetaKnightHeadSSBB:1137811439906738267>",
+      "strings": ["metaknight", "mk"]
+    },
+    {
+      "emote": "<:MrGameWatchHeadSSBB:1137816341156470804>",
+      "strings": ["mr_game_and_watch", "game_and_watch", "g&w", "gaw"]
+    },
+    {
+      "emote": "<:NessHeadSSBB:1137816342079221800>",
+      "strings": ["ness"]
+    },
+    {
+      "emote": "<:OlimarHeadSSBB:1137816343069073648>",
+      "strings": ["olimar"]
+    },
+    {
+      "emote": "<:PikachuHeadSSBB:1137816344088297483>",
+      "strings": ["pikachu"]
+    },
+    {
+      "emote": "<:ROBHeadSSBB:1137816345535328317>",
+      "strings": ["rob", "robot"]
+    },
+    {
+      "emote": "<:SnakeHeadSSBB:1137816346311282689>",
+      "strings": ["snake"]
+    },
+    {
+      "emote": "<:SonicHeadSSBB:1137816534723604521>",
+      "strings": ["sonic"]
+    },
+    {
+      "emote": "<:ToonLinkHeadSSBB:1137811425486704681>",
+      "strings": ["toon_link", "toonlink", "tl"]
+    },
+    {
+      "emote": "<:WarioHeadSSBB:1137816421791961118>",
+      "strings": ["wario"]
+    },
+    {
+      "emote": "<:ZeroSuitSamusHeadSSBB:1137816349406679051>",
+      "strings": ["zero_suit_samus", "zss"]
+    },
+    {
+      "emote": "<:BowserHeadSSBB:1137881187868741744>",
+      "strings": ["bowser"]
+    },
+    {
+      "emote": "<:CaptainFalconHeadSSBB:1137881036123033630>",
+      "strings": ["captain_falcon", "falcon", "cf"]
+    },
+    {
+      "emote": "<:DonkeyKongHeadSSBB:1137881034051035227>",
+      "strings": ["donkey_kong", "dk"]
+    },
+    {
+      "emote": "<:GanondorfHeadSSBB:1137881032943734895>",
+      "strings": ["ganondorf", "ganon"]
+    },
+    {
+      "emote": "<:IkeHeadSSBB:1137881031417012235>",
+      "strings": ["ike"]
+    },
+    {
+      "emote": "<:LinkHeadSSBB:1137881024957796452>",
+      "strings": ["link"]
+    },
+    {
+      "emote": "<:LucasHeadSSBB:1137880748691566764>",
+      "strings": ["lucas"]
+    },
+    {
+      "emote": "<:LuigiHeadSSBB:1137881024081182852>",
+      "strings": ["luigi"]
+    },
+    {
+      "emote": "<:MarioHeadSSBB:1137881023212966058>",
+      "strings": ["mario"]
+    },
+    {
+      "emote": "<:PeachHeadSSBB:1137881021770108988>",
+      "strings": ["peach"]
+    },
+    {
+      "emote": "<:PitHeadSSBB:1137881020469891232>",
+      "strings": ["pit"]
+    },
+    {
+      "emote": "<:PokmonTrainerHeadSSBB:1137880744241397890>",
+      "strings": ["pokemon_trainer", "pt"]
+    },
+    {
+      "emote": "<:SamusHeadSSBB:1137880741674496060>",
+      "strings": ["samus"]
+    },
+    {
+      "emote": "<:SheikHeadSSBB:1137880740521054289>",
+      "strings": ["sheik"]
+    },
+    {
+      "emote": "<:WolfHeadSSBB:1137880738767835147>",
+      "strings": ["wolf"]
+    },
+    {
+      "emote": "<:YoshiHeadSSBB:1137880737488584865>",
+      "strings": ["yoshi"]
+    },
+    {
+      "emote": "<:ZeldaHeadSSBB:1137880736540659794>",
+      "strings": ["zelda"]
+    }
+  ]
+}

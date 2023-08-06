@@ -4,30 +4,13 @@ import json
 import asyncio
 from discord.ext import commands
 
-intents = discord.Intents.default()
-intents.members = True
-
-clonebot = False
-
-if clonebot == True:
-    cpfx = ","
-elif clonebot == False:
-    cpfx = "-"
-
-client = commands.Bot(command_prefix=cpfx, intents=intents)
-
-if clonebot == False:
-    searchChannel = 854427760389652490
-    miscChannel = 854428093459202099
-    modChannel = 1029873581158576230
-    matchChannel = 854428351800016907
-elif clonebot == True:
-    searchChannel = 837907088969302019
-    miscChannel = 849389145066831913
-    modChannel = 837907088969302019
-    matchChannel = 840823468362301450
-
-channelList = [searchChannel, miscChannel, modChannel, matchChannel]
+searchChannel = 0
+miscChannel = 0
+modChannel = 0
+matchChannel = 0
+cpfx = '-'
+botkey = ''
+completestagelist = []
 
 join = '🔔'
 leave = '🚪'
@@ -38,131 +21,66 @@ rm = '🗡️'
 abort = '🔴'
 accept = '✅'
 cancel = '❌'
-versus = '<:vs:843364613986189342>'
+versus = '🆚'
+win = '🏆'
+loss = '😥'
 
-BF = '<Battlefield:837907213627686943>'
-FD = '<FinalDestination:837907213695057950>'
-SV = '<Smashville:837907213678542863>'
-YI = '<YoshisIsland:925956998024007680>'
-LC = '<LylatCruise:925957016135020545>'
-PS = '<PS1:925957052147310622>'
-CS = '<CastleSiege:925957337867485284>'
-FO = '<FrigateOrpheon:925957063383867483>'
-PS2 = '<:PS2:1059009265433596004>'
+completestagelist = []
+stageTNs = {}
+emotes2stage = {}
+stage2emotes = {}
+brawlChara = {}
+characterlist = []
 
-# BF = client.get_emoji(837907213627686943) # Battlefield
-# FD = client.get_emoji(837907213695057950) # FinalDestination
-# SV = client.get_emoji(837907213678542863) # Smashville
-# YI = client.get_emoji(925956998024007680) # YoshisIsland
-# LC = client.get_emoji(925957016135020545) # LylatCruise
-# PS = client.get_emoji(925957052147310622) # PS1
-# CS = client.get_emoji(925957337867485284) # CastleSiege
-# FO = client.get_emoji(925957063383867483) # Frigate Orpheon
+stages = []
+starters = []
+counterpicks = []
 
-# BF = discord.PartialEmoji(name="Battlefield", id=837907213627686943)
-# FD = discord.PartialEmoji(name="FinalDestination", id=837907213695057950)
-# SV = discord.PartialEmoji(name="Smashville", id=837907213678542863)
-# YI = discord.PartialEmoji(name="YoshisIsland", id=925956998024007680)
-# LC = discord.PartialEmoji(name="LylatCruise", id=925957016135020545)
-# PS = discord.PartialEmoji(name="PS1", id=925957052147310622)
-# CS = discord.PartialEmoji(name="CastleSiege", id=925957337867485284)
-# FO = discord.PartialEmoji(name="FrigateOrpheon", id=925957063383867483)
+with open("secrets.json") as f:
+    secrets = json.load(f)
+    botkey = secrets['bot_key']
 
-# BF = '<:Battlefield:837907213627686943>'
-# FD = '<:FinalDestination:837907213695057950>'
-# SV = '<:Smashville:837907213678542863>'
-# YI = '<:YoshisIsland:925956998024007680>'
-# LC = '<:LylatCruise:925957016135020545>'
-# PS = '<:PS1:925957052147310622>'
-# CS = '<:CastleSiege:925957337867485284>'
-# FO = '<:FrigateOrpheon:925957063383867483>'
+with open("config.json") as f:
+    config = json.load(f)
+    searchChannel = config['channels']['search']
+    miscChannel = config['channels']['misc']
+    modChannel = config['channels']['mod']
+    matchChannel = config['channels']['match']
+    cpfx = config['command_prefix']
+
+    for entry in config['characters']:
+        for s in entry['strings']:
+            brawlChara[s] = entry['emote']
+        characterlist.append(entry['emote'])
+
+    stages_data = config['stages']
+    for value in stages_data:
+        completestagelist.append(value['emote'])
+        stageTNs[value['emote']] = value['thumbnail']
+        emotes2stage[value['emote']] = value['name']
+        stage2emotes[value['emote']] = value['emote']
+        if value['is_starter']:
+            stages.append(value['emote'])
+            starters.append(value['emote'])
+        else:
+            counterpicks.append(value['emote'])
+
+intents = discord.Intents.default()
+intents.members = True
+intents.messages = True
+intents.message_content = True
+
+client = commands.Bot(command_prefix=cpfx, intents=intents)
+
+channelList = [searchChannel, miscChannel, modChannel, matchChannel]
 
 noBan = '⬜'
-completestagelist = [BF, FD, SV, YI, LC, PS, CS, FO]
 netpColor = 4312575  # light blue
 wifiColor = 16613797  # light pink
 defaultColor = 15174967  # orange
 netpSymbol = '<:netplay:849372987173371925>'
 wifiSymbol = '<:wifi:849372254789828618>'
 attributes = {"WIFI": {'symbol': wifiSymbol, 'color': wifiColor}, "NETP": {'symbol': netpSymbol, 'color': netpColor}}
-
-stageTNs = {
-    '<:Battlefield:837907213627686943>': 'https://cdn.discordapp.com/attachments/845292400440377374/861081456619814912/Battlefield_Preview.png',
-    '<:FinalDestination:837907213695057950>': 'https://cdn.discordapp.com/attachments/845292400440377374/861081454724120576/Final_Destination_Preview.png',
-    '<:Smashville:837907213678542863>': 'https://cdn.discordapp.com/attachments/845292400440377374/861081452766298142/Smashville_Preview.png',
-    '<:YoshisIsland:925956998024007680>': 'https://cdn.discordapp.com/attachments/845292400440377374/861081450505830420/Yoshis_Preview.png',
-    '<:LylatCruise:925957016135020545>': 'https://cdn.discordapp.com/attachments/845292400440377374/861081448805826560/Lylat_Preview.png',
-    '<:PS1:925957052147310622>': 'https://cdn.discordapp.com/attachments/845292400440377374/861081446424510474/PS1_Preview.png',
-    '<:CastleSiege:925957337867485284>': 'https://cdn.discordapp.com/attachments/845292400440377374/861081434109640714/Castle_Siege_Preview.png',
-    '<:FrigateOrpheon:925957063383867483>': 'https://cdn.discordapp.com/attachments/845292400440377374/861081444134813706/Frigate_Orpheon_Preview.png',
-    '<:PS2:1059009265433596004>': 'https://cdn.discordapp.com/attachments/845292400440377374/1059013954493497344/PS2TN.png'
-}
-
-brawlChara = {"mario": '<:mario:838822011412676708>', "donkey kong": '<:donkeykong:838822011114356760>',
-              "dk": '<:donkeykong:838822011114356760>',
-              "link": '<:link:838822011286716486>', "samus": '<:samus:838822011009499147>',
-              "kirby": '<:kirby:838822010968735796>', "fox": '<:fox:838822011408613396>',
-              "melee": '<:fox:838822011408613396>',
-              "pikachu": '<:pikachu:838822011341111346>', "marth": '<:marth:838822011122745376>',
-              "mr. game & watch": '<:mrgameandwatch:838822011441774642>',
-              "mr.game & watch": '<:mrgameandwatch:838822011441774642>',
-              "mr.g&w": '<:mrgameandwatch:838822011441774642>',
-              "mr game and watch": '<:mrgameandwatch:838822011441774642>',
-              "game n watch": '<:mrgameandwatch:838822011441774642>',
-              "mr game n watch": '<:mrgameandwatch:838822011441774642>',
-              "gnw": '<:mrgameandwatch:838822011441774642>', "mr gnw": '<:mrgameandwatch:838822011441774642>',
-              "gandw": '<:mrgameandwatch:838822011441774642>',
-              "mr game & watch": '<:mrgameandwatch:838822011441774642>',
-              "game & watch": '<:mrgameandwatch:838822011441774642>',
-              "gw": '<:mrgameandwatch:838822011441774642>', "mr.game and watch": '<:mrgameandwatch:838822011441774642>',
-              "g&w": '<:mrgameandwatch:838822011441774642>', "luigi": '<:luigi:838822011421196358>',
-              "diddy": '<:diddykong:838822011337572394>', "green mario": '<:luigi:838822011421196358>',
-              "diddy kong": '<:diddykong:838822011337572394>', "zelda": '<:zelda:838822011304280164>',
-              "sheik": '<:sheik:838822011308212274>', "pit": '<:pit:838822011084996639>',
-              "meta knight": '<:metaknight:838822011248967700>',
-              "metaknight": '<:metaknight:838822011248967700>', "mk": '<:metaknight:838822011248967700>',
-              "falco": '<:falco:838822011366408302>', "pokemon trainer": '<:pokemontrainer:838822010884194325>',
-              "pt": '<:pokemontrainer:838822010884194325>',
-              "pokemon": '<:pokemontrainer:838822010884194325>', "trainer": '<:pokemontrainer:838822010884194325>',
-              "squirtle": '<:squirtle:838822011202437201>', "ivysaur": '<:ivysaur:838822011420803073>',
-              "charizard": '<:charizard:838822011223539752>',
-              "ike": '<:ike:838822010921943102>', "snake": '<:snake:838822011328659536>',
-              "daisy": '<:peach:838822011030863874>',
-              "peach": '<:peach:838822011030863874>', "yoshi": '<:yoshi:838822011164950582>',
-              "ganondorf": '<:ganondorf:838822011324203088>', "ganon": '<:ganondorf:838822011324203088>',
-              "ice climbers": '<:iceclimbers:838822010992984117>',
-              "ics": '<:iceclimbers:838822010992984117>', "ic": '<:iceclimbers:838822010992984117>',
-              "king dedede": '<:kingdedede:838822011224195082>', "king ddd": '<:kingdedede:838822011224195082>',
-              "ddd": '<:kingdedede:838822011224195082>', "d3": '<:kingdedede:838822011224195082>',
-              "wolf": '<:wolf:838822011215413268>', "lucario": '<:lucario:838822011349893181>',
-              "ness": '<:ness:838822011031519314>', "sonic": '<:sonic:838822011202961499>',
-              "zero suit samus": '<:zerosuitsamus:838822011299037234>',
-              "zero suit": '<:zerosuitsamus:838822011299037234>', "zss": '<:zerosuitsamus:838822011299037234>',
-              "bowser": '<:bowser:838822011371257918>', "wario": '<:wario:838822011240448051>',
-              "toon link": '<:toonlink:838822011181727774>', "tink": '<:toonlink:838822011181727774>',
-              "tl": '<:toonlink:838822011181727774>',
-              "rob": '<:rob:838822011375452170>', "r.o.b.": '<:rob:838822011375452170>',
-              "olimar": '<:olimar:838822011303362610>', "captain falcon": '<:captainfalcon:838822011370340362>',
-              "cf": '<:captainfalcon:838822011370340362>',
-              "falcon": '<:captainfalcon:838822011370340362>', "jigglypuff": '<:jigglypuff:838822010929807401>',
-              "puff": '<:jigglypuff:838822010929807401>', "lucas": '<:lucas:838822011248836668>',
-              "random": '<:random:838822010795589673>'}
-
-characterlist = ['<:mario:838822011412676708>', '<:donkeykong:838822011114356760>', '<:link:838822011286716486>',
-                 '<:samus:838822011009499147>', '<:zerosuitsamus:838822011299037234>',
-                 '<:kirby:838822010968735796>', '<:fox:838822011408613396>',
-                 '<:pikachu:838822011341111346>', '<:marth:838822011122745376>', '<:mrgameandwatch:838822011441774642>',
-                 '<:luigi:838822011421196358>', '<:diddykong:838822011337572394>', '<:zelda:838822011304280164>',
-                 '<:sheik:838822011308212274>', '<:pit:838822011084996639>', '<:metaknight:838822011248967700>',
-                 '<:falco:838822011366408302>', '<:pokemontrainer:838822010884194325>', '<:ike:838822010921943102>',
-                 '<:snake:838822011328659536>', '<:peach:838822011030863874>', '<:yoshi:838822011164950582>',
-                 '<:ganondorf:838822011324203088>', '<:iceclimbers:838822010992984117>',
-                 '<:kingdedede:838822011224195082>',
-                 '<:wolf:838822011215413268>', '<:lucario:838822011349893181>', '<:ness:838822011031519314>',
-                 '<:sonic:838822011202961499>', '<:bowser:838822011371257918>', '<:wario:838822011240448051>',
-                 '<:toonlink:838822011181727774>', '<:rob:838822011375452170>', '<:olimar:838822011303362610>',
-                 '<:captainfalcon:838822011370340362>', '<:jigglypuff:838822010929807401>',
-                 '<:lucas:838822011248836668>']
 
 opponents = {}
 players2matches = {}
@@ -202,55 +120,8 @@ sdgames = {}
 
 searchIcons = [abort, challenge]
 searchSelection = [accept, cancel]
-winloss = ["<:win:844045482237886465>", "<:loss:844045492798750761>"]
-win = "<:win:844045482237886465>"
-loss = "<:loss:844045492798750761>"
+winloss = [win, loss]
 
-emotes2stage = {'<:Battlefield:837907213627686943>': "Battlefield",
-                '<:FinalDestination:837907213695057950>': "Final Destination",
-                '<:Smashville:837907213678542863>': "Smashville",
-                '<:YoshisIsland:925956998024007680>': "Yoshi's Island",
-                '<:LylatCruise:925957016135020545>': "Lylat Cruise",
-                '<:PS1:925957052147310622>': "Pokemon Stadium 1",
-                '<:CastleSiege:925957337867485284>': "Castle Siege",
-                '<:FrigateOrpheon:925957063383867483>': "Frigate Orpheon",
-                '<:PS2:1059009265433596004>': "Pokemon Stadium 2"
-                }
-
-# emotes2stage = {'<:Battlefield:837907213627686943>': "Battlefield",
-#                 '<:FinalDestination:837907213695057950>': "Final Destination",
-#                 '<:Smashville:837907213678542863>': "Smashville",
-#                 '<:YoshisIsland:925956998024007680>': "Yoshi's Island",
-#                 '<:LylatCruise:925957016135020545>': "Lylat Cruise",
-#                 '<:PS1:925957052147310622>': "Pokemon Stadium 1",
-#                 '<:CastleSiege:925957337867485284>': "Castle Siege",
-#                 '<:FrigateOrpheon:925957063383867483>': "Frigate Orpheon"
-#                 }
-stage2emotes = {'<:Battlefield:837907213627686943>': BF,
-                '<:FinalDestination:837907213695057950>': FD,
-                '<:Smashville:837907213678542863>': SV,
-                '<:YoshisIsland:925956998024007680>': YI,
-                '<:LylatCruise:925957016135020545>': LC,
-                '<:PS1:925957052147310622>': PS,
-                '<:CastleSiege:925957337867485284>': CS,
-                '<:FrigateOrpheon:925957063383867483>': FO,
-                '<:PS2:1059009265433596004>': PS2
-                }
-
-startersize = 3
-if startersize == 3:
-    starters = ['<:Battlefield:837907213627686943>', '<:FinalDestination:837907213695057950>',
-                '<:Smashville:837907213678542863>']
-    counterpicks = ['<:YoshisIsland:925956998024007680>', '<:LylatCruise:925957016135020545>', '<:PS2:1059009265433596004>']
-    stages = [BF, FD, SV]
-
-elif startersize == 5:
-    starters = ['<:Battlefield:837907213627686943>', '<:FinalDestination:837907213695057950>',
-                '<:Smashville:837907213678542863>', '<:YoshisIsland:925956998024007680>',
-                '<:LylatCruise:925957016135020545>']
-    counterpicks = ['<:PS1:925957052147310622>', '<:CastleSiege:925957337867485284>',
-                    '<:FrigateOrpheon:925957063383867483>']
-    stages = [BF, FD, SV, YI, LC]
 fullstagelist = starters + counterpicks
 dsl = True
 global decay
@@ -746,7 +617,7 @@ async def smashdown(ctx):
         return
 
     username = ctx.message.author
-    userpfp = ctx.message.author.avatar_url
+    userpfp = ctx.message.author.display_avatar.url
     embed = discord.Embed(
         title=f"Smashdown!",
         color=defaultColor,
@@ -768,23 +639,7 @@ async def smashdown(ctx):
         "loser": "n/a",
         "messageObj": smashdowngame,
         "winsNeeded": 10,
-        "remaining": ['<:mario:838822011412676708>', '<:donkeykong:838822011114356760>', '<:link:838822011286716486>',
-                      '<:samus:838822011009499147>', '<:zerosuitsamus:838822011299037234>',
-                      '<:kirby:838822010968735796>', '<:fox:838822011408613396>',
-                      '<:pikachu:838822011341111346>', '<:marth:838822011122745376>',
-                      '<:mrgameandwatch:838822011441774642>',
-                      '<:luigi:838822011421196358>', '<:diddykong:838822011337572394>', '<:zelda:838822011304280164>',
-                      '<:sheik:838822011308212274>', '<:pit:838822011084996639>', '<:metaknight:838822011248967700>',
-                      '<:falco:838822011366408302>', '<:pokemontrainer:838822010884194325>',
-                      '<:ike:838822010921943102>',
-                      '<:snake:838822011328659536>', '<:peach:838822011030863874>', '<:yoshi:838822011164950582>',
-                      '<:ganondorf:838822011324203088>', '<:iceclimbers:838822010992984117>',
-                      '<:kingdedede:838822011224195082>',
-                      '<:wolf:838822011215413268>', '<:lucario:838822011349893181>', '<:ness:838822011031519314>',
-                      '<:sonic:838822011202961499>', '<:bowser:838822011371257918>', '<:wario:838822011240448051>',
-                      '<:toonlink:838822011181727774>', '<:rob:838822011375452170>', '<:olimar:838822011303362610>',
-                      '<:captainfalcon:838822011370340362>', '<:jigglypuff:838822010929807401>',
-                      '<:lucas:838822011248836668>'],
+        "remaining": brawlChara.copy(),
         "closed": False,
     }
 
@@ -797,7 +652,7 @@ async def smashdown(ctx):
 @client.command()
 async def ironman(ctx):
     username = ctx.message.author
-    userpfp = ctx.message.author.avatar_url
+    userpfp = ctx.message.author.display_avatar.url
     embed = discord.Embed(
         title=f"Randomized Roster for {username}",
         color=defaultColor,
@@ -999,7 +854,7 @@ async def rank(ctx):
         title=f"{playerInfo}",
         colour=discord.Colour(defaultColor)
     )
-    embed.set_thumbnail(url=playerInfo.avatar_url)
+    embed.set_thumbnail(url=playerInfo.display_avatar.url)
 
     if playerID in rankings["NETP"]:
         showNetpELO = displayELO(playerID, 'NETP')
@@ -1087,7 +942,7 @@ async def ranked(ctx):
         description=f"({abort} = cancel search)\n(Search will end after 1 hour)\nClick on {challenge} to challenge them!\n"
                     f"Or unreact to withdraw your challenge.",
         color=discord.Colour(embedColor))
-    embed.set_thumbnail(url=f"{ctx.message.author.avatar_url}")
+    embed.set_thumbnail(url=f"{ctx.message.author.display_avatar.url}")
     matchSearch = await ctx.send(embed=embed)
     searching[matchType][setType].append(playerID)
     searchMessages[matchSearch.id] = {"player": playerID,
@@ -1112,7 +967,7 @@ async def ranked(ctx):
             title=f"{ctx.message.author} [{showELO}] was searching for a match.",
             description=f"Search queue ended",
             color=discord.Colour(embedColor))
-        searchClose.set_thumbnail(url=f"{ctx.message.author.avatar_url}")
+        searchClose.set_thumbnail(url=f"{ctx.message.author.display_avatar.url}")
         await matchSearch.edit(embed=searchClose)
         await matchSearch.clear_reactions()
         forgetMessage(matchSearch.id)
@@ -1168,7 +1023,7 @@ async def on_reaction_add(reaction, user):
                 title=f"{user} [{showELO}] was searching for a match.",
                 description=f"Search queue ended",
                 color=discord.Colour(embedColor))
-            searchEnd.set_thumbnail(url=f"{user.avatar_url}")
+            searchEnd.set_thumbnail(url=f"{user.display_avatar.url}")
             searchObj = searchMessages[messageID]["messageObj"]
             await searchObj.edit(embed=searchEnd)
             await searchObj.clear_reactions()
@@ -1201,7 +1056,7 @@ async def on_reaction_add(reaction, user):
                       f"( {icon} {matchType} || {setType} )",
                 description=f"{accept} = accept challenge!",
                 color=discord.Colour(embedColor))
-            embed.set_thumbnail(url=user.avatar_url)  # shows the challenger's pfp
+            embed.set_thumbnail(url=user.display_avatar.url)  # shows the challenger's pfp
             # fetch change
             player = client.get_user(playerID)
             dm = await player.create_dm()
@@ -1414,7 +1269,7 @@ async def on_reaction_add(reaction, user):
             # print("loser should not be selecting ", matches[messageID]["selections"][matches[messageID]["loser"]])
             winner = matches[messageID]['winner']
             loser = matches[messageID]['loser']
-            winnerName = str(client.get_user(winner))[:-5]
+            winnerName = str(client.get_user(winner))
             matches[messageID]["players"][winner]["wins"] += 1
             winnerChara = matches[messageID]['players'][winner]['character']
             if dsl == True:
@@ -1488,12 +1343,12 @@ async def on_reaction_add(reaction, user):
                 # print("matches should be forgotten: ", matches)
                 embed = matchWindowObj.embeds[0]
                 embed.add_field(name=f"Results",
-                                value=f"{win} {str(client.get_user(winner))[:-5]} [{showWinnerELO}] {winnerChange}\n"
-                                      f"{loss} {str(client.get_user(loser))[:-5]} [{showLoserELO}] {loserChange}",
+                                value=f"{win} {str(client.get_user(winner))} [{showWinnerELO}] {winnerChange}\n"
+                                      f"{loss} {str(client.get_user(loser))} [{showLoserELO}] {loserChange}",
                                 inline=False)
                 rmWindow = 30
                 embed.set_footer(text= f"Both players can click {rm} to initiate a rematch")
-                winnerAvatar = client.get_user(winner).avatar_url
+                winnerAvatar = client.get_user(winner).display_avatar.url
                 embed.set_thumbnail(url=winnerAvatar)
                 await matchWindowObj.unpin()
                 await matchWindowObj.edit(embed=embed)
@@ -1556,7 +1411,7 @@ async def on_reaction_add(reaction, user):
                 forgetMessage(messageID)
                 # print("checking for empty matches list: ", matches)
                 embed = discord.Embed(
-                    title=f"{str(playerName)[:-5]} [{playerELO}] vs {str(challengerName)[:-5]} [{challengerELO}] \n"
+                    title=f"{str(playerName)} [{playerELO}] vs {str(challengerName)} [{challengerELO}] \n"
                           f"( {icon} {matchType} || {setType} )",
                     description=f"(Both players can agree to cancel the set by clicking: {cancel}.)",
                     color=discord.Colour(embedColor))
@@ -1917,7 +1772,7 @@ async def on_raw_reaction_add(payload):
             title=f"{playerName} [{showELO}] found a match.",
             description=f"versus <@{challengerID}>",
             color=discord.Colour(embedColor))
-        searchFound.set_thumbnail(url=playerName.avatar_url)
+        searchFound.set_thumbnail(url=playerName.display_avatar.url)
         await searchQueue.edit(embed=searchFound)
         await searchQueue.clear_reactions()
         forgetMessage(searchmes)
@@ -1928,7 +1783,7 @@ async def on_raw_reaction_add(payload):
         playerELO = displayELO(playerID, matchType)
         challengerELO = displayELO(challengerID, matchType)
         embed = discord.Embed(
-            title=f"{str(playerName)[:-5]} [{playerELO}] vs {str(challengerName)[:-5]} [{challengerELO}] \n"
+            title=f"{str(playerName)} [{playerELO}] vs {str(challengerName)} [{challengerELO}] \n"
                   f"( {icon} {matchType} || {setType} )",
             description=f"(Both players can agree to cancel the set by clicking: {cancel}.)",
             color=discord.Colour(embedColor))
@@ -2004,7 +1859,7 @@ async def on_raw_reaction_add(payload):
             matches[matchWindowID]["selections"][opponents[playerID]] = True
             p1name = str(client.get_user(playerID))
             chara1 = matches[matchWindowID]['players'][playerID]['character']
-            matches[matchWindowID]["heading"] = f"({p1name[:-5]}) {chara1} {versus} "
+            matches[matchWindowID]["heading"] = f"({p1name}) {chara1} {versus} "
             # print(matches[matchWindowID]["heading"])  # testing
             stage = matches[matchWindowID]["stages"][0]
             stageName = emotes2stage[stage]
@@ -2030,7 +1885,7 @@ async def on_raw_reaction_add(payload):
             matches[matchWindowID]["selections"][playerID] = False
             p2name = str(client.get_user(playerID))
             chara2 = matches[matchWindowID]['players'][playerID]['character']
-            matches[matchWindowID]["heading"] += f"{chara2} ({p2name[:-5]})\n"
+            matches[matchWindowID]["heading"] += f"{chara2} ({p2name})\n"
             # print(matches[matchWindowID]["heading"])  # testing
 
             matchWindowObj = matches[matchWindowID]["messageObj"]
@@ -2159,7 +2014,7 @@ async def on_message(message):
                 matches[matchWindowID]["banning"] = firstStrike
                 stagelist = matches[matchWindowID]["stages"]
                 newEmbed = matchWindowObj.embeds[0]
-                heading = f"({p1name[:-5]}) {chara1} {versus} {chara2} ({p2name[:-5]})\n"
+                heading = f"({p1name}) {chara1} {versus} {chara2} ({p2name})\n"
                 matches[matchWindowID]["heading"] = heading
                 newEmbed.set_field_at(0, name=f"Game 1",
                                       value=f"{heading}"
@@ -2200,7 +2055,7 @@ async def on_message(message):
                 matches[matchWindowID]["selections"][opponents[authorID]] = True
                 p1name = str(client.get_user(authorID))
                 chara1 = matches[matchWindowID]['players'][authorID]['character']
-                matches[matchWindowID]["heading"] = f"({p1name[:-5]}) {chara1} {versus} "
+                matches[matchWindowID]["heading"] = f"({p1name}) {chara1} {versus} "
                 # print(matches[matchWindowID]["heading"])  # testing
                 stage = matches[matchWindowID]["stages"][0]
                 stageName = emotes2stage[stage]
@@ -2225,7 +2080,7 @@ async def on_message(message):
                 matches[matchWindowID]["selections"][authorID] = False
                 p2name = str(client.get_user(authorID))
                 chara2 = matches[matchWindowID]['players'][authorID]['character']
-                matches[matchWindowID]["heading"] += f"{chara2} ({p2name[:-5]})\n"
+                matches[matchWindowID]["heading"] += f"{chara2} ({p2name})\n"
                 # print(matches[matchWindowID]["heading"])  # testing
 
                 matchWindowObj = matches[matchWindowID]["messageObj"]
@@ -2242,13 +2097,5 @@ async def on_message(message):
                 for icon in winloss:
                     await matchWindowObj.add_reaction(icon)
 
-
-# last worked on 1/1/2023
-
-
-if clonebot == True:
-    botkey = " "
-elif clonebot == False:
-    botkey = " "
 
 client.run(botkey)
