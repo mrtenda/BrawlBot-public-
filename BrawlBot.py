@@ -4,13 +4,8 @@ import json
 import asyncio
 from discord.ext import commands
 
-searchChannel = 0
-miscChannel = 0
-modChannel = 0
-matchChannel = 0
-cpfx = '-'
-botkey = ''
-completestagelist = []
+from brawlbot.context import create_context_from_config
+from brawlbot.message_string_util import showstagelist, channels_to_str
 
 join = '🔔'
 leave = '🚪'
@@ -25,45 +20,16 @@ versus = '🆚'
 win = '🏆'
 loss = '😥'
 
-completestagelist = []
-stageTNs = {}
-emotes2stage = {}
-stage2emotes = {}
-brawlChara = {}
-characterlist = []
-
-stages = []
-starters = []
-counterpicks = []
-
 with open("secrets.json") as f:
     secrets = json.load(f)
     botkey = secrets['bot_key']
 
 with open("config.json") as f:
     config = json.load(f)
-    searchChannel = config['channels']['search']
-    miscChannel = config['channels']['misc']
-    modChannel = config['channels']['mod']
-    matchChannel = config['channels']['match']
+
     cpfx = config['command_prefix']
 
-    for entry in config['characters']:
-        for s in entry['strings']:
-            brawlChara[s] = entry['emote']
-        characterlist.append(entry['emote'])
-
-    stages_data = config['stages']
-    for value in stages_data:
-        completestagelist.append(value['emote'])
-        stageTNs[value['emote']] = value['thumbnail']
-        emotes2stage[value['emote']] = value['name']
-        stage2emotes[value['emote']] = value['emote']
-        if value['is_starter']:
-            stages.append(value['emote'])
-            starters.append(value['emote'])
-        else:
-            counterpicks.append(value['emote'])
+    context = create_context_from_config(config)
 
 intents = discord.Intents.default()
 intents.members = True
@@ -72,7 +38,9 @@ intents.message_content = True
 
 client = commands.Bot(command_prefix=cpfx, intents=intents)
 
-channelList = [searchChannel, miscChannel, modChannel, matchChannel]
+channelList = [context.searchChannels, context.miscChannels, context.modChannels, context.matchChannels]
+# flatten the list
+channelList = [item for sublist in channelList for item in sublist]
 
 noBan = '⬜'
 netpColor = 4312575  # light blue
@@ -122,7 +90,7 @@ searchIcons = [abort, challenge]
 searchSelection = [accept, cancel]
 winloss = [win, loss]
 
-fullstagelist = starters + counterpicks
+fullstagelist = context.starters + context.counterpicks
 dsl = True
 global decay
 decay = False
@@ -134,12 +102,6 @@ global minGames
 minGames = 3;
 
 sets = ["bo3", "bo5", "bo7"]
-
-def showstagelist(stages):
-    text = ""
-    for icon in stages:
-        text += f"{icon} {emotes2stage[icon]}\n"
-    return text
 
 
 def remainingstagelist(fullstagelist, dsl):
@@ -168,7 +130,7 @@ def scrambled(inputlist):
 
 
 def randomroster():
-    randomlist = scrambled(characterlist)
+    randomlist = scrambled(context.characterlist)
     randRoster = ""
     newLineCounter = 0
     for character in randomlist:
@@ -470,10 +432,10 @@ def calculateELO(winnerID, loserID, matchType, endCheck, modCheck, wNeeded):
 def createCharaList():
     charaList = "Here's a list of all the character inputs I can recognize:\n"
     charaList += "```"
-    charaInputs = list(brawlChara.keys())
+    charaInputs = list(context.brawlChara.keys())
     sortedCharaInputs = sorted(charaInputs)
     for input in sortedCharaInputs:
-        charaEmote = brawlChara[input]
+        charaEmote = context.brawlChara[input]
         charaList += f"{input}\n"
     charaList += "```"
     return charaList
@@ -496,7 +458,7 @@ async def helpme(ctx):
                   f"(begin every command with ``-`` in order for BrawlBot to recognize your command.)\n"
                   f"\n"
                   f"**__ranked__** ``(Online Type)`` ``(Set Type)``\n"
-                  f"> This command begins a search queue for a ranked set. (Only usable in <#{searchChannel}>)\n"
+                  f"> This command begins a search queue for a ranked set. (Only usable in {channels_to_str(context.searchChannels)}\n"
                   f"> Online Type = ``netp`` (if you use netplay) or ``wifi`` (if you use wiimmfi)\n"
                   f"> Set Type = ``bo3`` (best of 3) or ``bo5`` or ``bo7``\n"
                   f"> \n"
@@ -504,7 +466,7 @@ async def helpme(ctx):
                   f"> ``-ranked netp bo3``\n"
                   f"> ``-ranked wifi bo5``\n"
                   f"**__rank__**\n"
-                  f"> This command allows you to view your own rank and standing in all ladders you're participating in. (Only usable in <#{miscChannel}>)\n"
+                  f"> This command allows you to view your own rank and standing in all ladders you're participating in. (Only usable in {channels_to_str(context.miscChannels)})\n"
                   f"> \n"
                   f"> You can look up another player's ranking info by @'ing them after the command.\n"
                   f"> \n"
@@ -516,7 +478,7 @@ async def helpme(ctx):
                   f"> ``-rank netp 3`` (retrieves the player who is top 3 in the netplay ladder)\n"
                   f"> ``-rank wifi 5`` (retrieves the player who is top 5 in the wiimmfi ladder)\n"
                   f"**__top__** ``(Online Type)`` ``(Page Number)``\n"
-                  f"> Displays a leaderboard of the top 10 players for the specified ladder type. (Only usable in <#{miscChannel}>)\n"
+                  f"> Displays a leaderboard of the top 10 players for the specified ladder type. (Only usable in {channels_to_str(context.miscChannels)})\n"
                   f"> Online Type = ``netp`` (if you use netplay) or ``wifi`` (if you use wiimmfi)\n"
                   f"> Page Number = input a number to view a specific page of the leaderboard.\n"
                   f"> If no number is given, default page will be 1.\n"
@@ -540,7 +502,7 @@ async def helpme(ctx):
 @client.command()
 async def decayon(ctx):
 
-    if ctx.message.channel.id != modChannel:
+    if ctx.message.channel.id not in context.modChannels:
         return
 
     await ctx.send("Decay activated")
@@ -588,7 +550,7 @@ async def decayon(ctx):
 
 @client.command()
 async def decayoff(ctx):
-    if ctx.message.channel.id != modChannel:
+    if ctx.message.channel.id not in context.modChannels:
         return
     await ctx.send("Decay deactivated")
     global decay
@@ -597,7 +559,7 @@ async def decayoff(ctx):
 
 @client.command()
 async def newseason(ctx):
-    if ctx.message.channel.id != modChannel:
+    if ctx.message.channel.id not in context.modChannels:
         return
     await ctx.send("New season started. Ranks were reset.")
     global rankings
@@ -639,7 +601,7 @@ async def smashdown(ctx):
         "loser": "n/a",
         "messageObj": smashdowngame,
         "winsNeeded": 10,
-        "remaining": brawlChara.copy(),
+        "remaining": context.brawlChara.copy(),
         "closed": False,
     }
 
@@ -681,7 +643,7 @@ async def characters(ctx):
 @client.command()
 async def ban(ctx):
     # checks if command is from the mod channel
-    if ctx.message.channel.id != modChannel:
+    if ctx.message.channel.id not in context.modChannels:
         return
 
     playerID = int(ctx.message.content[8:-1])
@@ -715,7 +677,7 @@ async def ban(ctx):
 @client.command()
 async def unban(ctx):
     # checks if command is from the mod channel
-    if ctx.message.channel.id != modChannel:
+    if ctx.message.channel.id not in context.modChannels:
         return
     playerID = int(ctx.message.content[10:-1])
 
@@ -777,9 +739,9 @@ async def changerank(ctx):
 @client.command()
 async def top(ctx):
     # checks if command is coming from it's designated channel
-    if ctx.message.channel.id != miscChannel:
+    if ctx.message.channel.id not in context.miscChannels:
         await ctx.message.delete()
-        await ctx.send(f"This command can only be used in <#{miscChannel}>", delete_after=10)
+        await ctx.send(f"This command can only be used in {channels_to_str(context.miscChannels)}", delete_after=10)
         return
 
     # checks if the user is banned
@@ -807,9 +769,9 @@ async def top(ctx):
 @client.command()
 async def rank(ctx):
     # checks if command is coming from it's designated channel
-    if ctx.message.channel.id != miscChannel:
+    if ctx.message.channel.id not in context.miscChannels:
         await ctx.message.delete()
-        await ctx.send(f"This command can only be used in <#{miscChannel}>", delete_after=10)
+        await ctx.send(f"This command can only be used in {channels_to_str(context.miscChannels)}", delete_after=10)
         return
 
     authorID = ctx.message.author.id
@@ -897,9 +859,9 @@ async def rank(ctx):
 @client.command()
 async def ranked(ctx):
     # checks if search message is from the search channel
-    if ctx.message.channel.id != searchChannel:
+    if ctx.message.channel.id not in context.searchChannels:
         await ctx.message.delete()
-        await ctx.send(f"This command can only be used in <#{searchChannel}>", delete_after=10)
+        await ctx.send(f"This command can only be used in {channels_to_str(context.searchChannels)}", delete_after=10)
         return
     if banCheck(ctx.message.author.id) == True:
         return
@@ -1040,7 +1002,7 @@ async def on_reaction_add(reaction, user):
                 return
             if user.id in players2matches.keys():
                 await reaction.remove(user)
-                channel = client.get_channel(searchChannel)
+                channel = client.get_channel(reaction.message.channel.id)
                 await channel.send(f"<@{user.id}>You are currently in a match.", delete_after=4)
                 return
             setType = searchMessages[messageID]["setType"]
@@ -1113,7 +1075,7 @@ async def on_reaction_add(reaction, user):
                                                 value=f"{matches[messageID]['heading']}"
                                                     f"\n"
                                                     f"Waiting for <@{nextStrike}> to strike 2. (click on the reactions):\n"
-                                                    f"{showstagelist(matches[messageID]['stages'])}",
+                                                    f"{showstagelist(matches[messageID]['stages'], context.emotes2stage)}",
                                                 inline=False)
                         await reaction.clear()
                         await matchWindowObj.edit(embed=newEmbed)
@@ -1129,7 +1091,7 @@ async def on_reaction_add(reaction, user):
                                                   value=f"{matches[messageID]['heading']}"
                                                         f"\n"
                                                         f"Waiting for <@{nextStrike}> to strike 1. (click on the reactions):\n"
-                                                        f"{showstagelist(matches[messageID]['stages'])}",
+                                                        f"{showstagelist(matches[messageID]['stages'], context.emotes2stage)}",
                                                   inline=False)
                         await reaction.clear()
                         await matchWindowObj.edit(embed=newEmbed)
@@ -1147,8 +1109,8 @@ async def on_reaction_add(reaction, user):
                                               value=f"{matches[messageID]['heading']}"
                                                     f"\n"
                                                     f"Waiting for <@{nextStrike}> to strike. (click on the reactions):\n"
-                                                    f"{matches[messageID]['stages'][0]} {emotes2stage[matches[messageID]['stages'][0]]} \n"
-                                                    f"{matches[messageID]['stages'][1]} {emotes2stage[matches[messageID]['stages'][1]]} \n",
+                                                    f"{matches[messageID]['stages'][0]} {context.emotes2stage[matches[messageID]['stages'][0]]} \n"
+                                                    f"{matches[messageID]['stages'][1]} {context.emotes2stage[matches[messageID]['stages'][1]]} \n",
                                               inline=False)
                         await reaction.clear()
                         await matchWindowObj.edit(embed=newEmbed)
@@ -1163,12 +1125,12 @@ async def on_reaction_add(reaction, user):
                         newEmbed.set_field_at(0, name=f"Game 1",
                                               value=f"{matches[messageID]['heading']}"
                                                     f"Stage:\n"
-                                                    f"{matches[messageID]['stages'][0]} {emotes2stage[matches[messageID]['stages'][0]]} \n"
+                                                    f"{matches[messageID]['stages'][0]} {context.emotes2stage[matches[messageID]['stages'][0]]} \n"
                                                     f"\n"
                                                     f"(winner reports by clicking <:win:844045482237886465> / "
                                                     f"loser reports by clicking <:loss:844045492798750761>)",
                                               inline=False)
-                        newEmbed.set_thumbnail(url=stageTNs[matches[messageID]['stages'][0]])
+                        newEmbed.set_thumbnail(url=context.stageTNs[matches[messageID]['stages'][0]])
                         await reaction.clear()
                         await matchWindowObj.clear_reaction(matches[messageID]['stages'][0].strip("<:>"))
                         await matchWindowObj.edit(embed=newEmbed)
@@ -1196,7 +1158,7 @@ async def on_reaction_add(reaction, user):
                                             value=f""
                                                 f"\n"
                                                 f"Waiting for <@{selecting}> to select their counterpick. (click on the reactions):\n"
-                                                f"{showstagelist(matches[messageID]['stages'])}",
+                                                f"{showstagelist(matches[messageID]['stages'], context.emotes2stage)}",
                                             inline=False)
                     await reaction.clear()
                     try:
@@ -1214,10 +1176,10 @@ async def on_reaction_add(reaction, user):
                     newEmbed.set_field_at(gameCount - 1, name=f"Game {gameCount}",
                                               value=f"(Waiting for character selections...)\n"
                                                     f"Stage:\n"
-                                                    f"{stage} {emotes2stage[stage]} \n"
+                                                    f"{stage} {context.emotes2stage[stage]} \n"
                                                     f"\n",
                                               inline=False)
-                    newEmbed.set_thumbnail(url=stageTNs[stage])
+                    newEmbed.set_thumbnail(url=context.stageTNs[stage])
                     matches[messageID]["heading"] = "N/A"
                     for icon in matches[messageID]['stages']:
                         await matchWindowObj.clear_reaction(icon.strip("<:>"))
@@ -1230,7 +1192,7 @@ async def on_reaction_add(reaction, user):
                     await matchWindowObj.edit(embed=newEmbed)
 
                     dm = await (client.get_user(selecting)).create_dm()
-                    charaSelect = discord.Embed(title=f"[Game {gameCount} | {stage} {emotes2stage[stage]}]",
+                    charaSelect = discord.Embed(title=f"[Game {gameCount} | {stage} {context.emotes2stage[stage]}]",
                                                 description=f"Choose your character for Game {gameCount}! \n Type out what character you will use.\n"
                                                             f"If you're staying on the same character, click {stay}\n"
                                                             f"\n"
@@ -1284,7 +1246,7 @@ async def on_reaction_add(reaction, user):
                                   name=f"Game {matches[messageID]['gameCount']} (Winner: {winnerChara} {winnerName})",
                                   value=f"{matches[messageID]['heading']}"
                                         f"Stage:\n"
-                                        f"{matches[messageID]['stages'][0]} {emotes2stage[matches[messageID]['stages'][0]]} \n",
+                                        f"{matches[messageID]['stages'][0]} {context.emotes2stage[matches[messageID]['stages'][0]]} \n",
                                   inline=False
                                   )
             newEmbed.set_thumbnail(url='')
@@ -1370,14 +1332,14 @@ async def on_reaction_add(reaction, user):
                                 value=f""
                                       f"\n"
                                       f"Waiting for <@{banning}> to ban. (click on the reactions):\n"
-                                      f"{showstagelist(matches[messageID]['stages'])}",
+                                      f"{showstagelist(matches[messageID]['stages'], context.emotes2stage)}",
                                 inline=False)
                 await matchWindowObj.edit(embed=embed)
                 for icon in winloss:
                     await matchWindowObj.clear_reaction(icon.strip("<:>"))
                 newstages = []
                 for stageicon in matches[messageID]['stages']:
-                    newstages.append(stage2emotes[stageicon])
+                    newstages.append(context.stage2emotes[stageicon])
                 # print("newstages", newstages)
                 for icon in newstages:
                     await matchWindowObj.add_reaction(icon)
@@ -1396,8 +1358,9 @@ async def on_reaction_add(reaction, user):
 
                 playerID = matches[messageID]["playerList"][0]
                 challengerID = matches[messageID]["playerList"][1]
-                channel = client.get_channel(matchChannel)
-                pings = await channel.send(f"<@{playerID}> <@{challengerID}>")
+                for channel_id in context.matchChannels:
+                    channel = client.get_channel(channel_id)
+                    pings = await channel.send(f"<@{playerID}> <@{challengerID}>")
 
                 matchType = matches[messageID]["matchType"]
                 playerELO = displayELO(playerID, matchType)
@@ -1429,7 +1392,7 @@ async def on_reaction_add(reaction, user):
                     "rematch": {},
                     "heading": "N/A",
                     "gameCount": 1,
-                    "stages": starters[:],
+                    "stages": context.starters[:],
                     "banning": "N/A",
                     "stagesel": "N/A",
                     "selections": {playerID: True, challengerID: True},
@@ -1525,7 +1488,7 @@ async def on_reaction_add(reaction, user):
                 selectmessageUsr = f"waiting for <@{user.id}>\nto pick their character...\n(type it in this chat)"
 
             newEmbed = discord.Embed(title="Smashdown!",
-                                     description=showroster(sdgames[messageID]["remaining"], characterlist),
+                                     description=showroster(sdgames[messageID]["remaining"], context.characterlist),
                                      color=defaultColor)
 
             newEmbed.add_field(name=opponentName, value=f"Wins: 0 🏆\n\n{selectmessageOpp}", inline=True)
@@ -1647,7 +1610,7 @@ async def on_reaction_add(reaction, user):
                                            value=f"Wins: {sdgames[sdgameID]['players'][winner]['wins']} 🏆\n\n")
 
                     updatedRoster = sdgameObj.embeds[0]
-                    updatedRoster.description = showroster(sdgames[sdgameID]["remaining"], characterlist)
+                    updatedRoster.description = showroster(sdgames[sdgameID]["remaining"], context.characterlist)
                     await sdgameObj.edit(embed=updatedRoster)
                     for icon in winloss:
                         await sdgameObj.add_reaction(icon)
@@ -1714,7 +1677,7 @@ async def on_reaction_remove(reaction, user):
 
 @client.event
 async def on_raw_reaction_add(payload):
-    channel = client.get_channel(matchChannel)
+    channel = client.get_channel(context.matchChannel)
     playerID = payload.user_id
     botID = client.user.id
     # print("payload: ", payload)
@@ -1799,7 +1762,7 @@ async def on_raw_reaction_add(payload):
             "rematch": {},
             "heading": "N/A",
             "gameCount": 1,
-            "stages": starters[:],
+            "stages": context.starters[:],
             "banning": "N/A",
             "stagesel": "N/A",
             "selections": {playerID: True, challengerID: True},
@@ -1842,7 +1805,7 @@ async def on_raw_reaction_add(payload):
     elif payload.emoji.name == stay and playerID != botID:
         playerDM = client.get_user(playerID)
         opponentDM = client.get_user(opponents[playerID])
-        matchchannel = f"<#{matchChannel}>"
+        matchchannel = f"<#{context.matchChannel}>"
         matchWindowID = players2matches[playerID]
         selectedDM = await playerDM.create_dm()
         selectedChara = discord.Embed(title=f"{matches[matchWindowID]['players'][playerID]['character']} selected!",
@@ -1862,7 +1825,7 @@ async def on_raw_reaction_add(payload):
             matches[matchWindowID]["heading"] = f"({p1name}) {chara1} {versus} "
             # print(matches[matchWindowID]["heading"])  # testing
             stage = matches[matchWindowID]["stages"][0]
-            stageName = emotes2stage[stage]
+            stageName = context.emotes2stage[stage]
 
             playerCharacter = matches[matchWindowID]['players'][playerID]['character']
             gameCount = matches[matchWindowID]['gameCount']
@@ -1895,7 +1858,7 @@ async def on_raw_reaction_add(payload):
                                   name=f"Game {matches[matchWindowID]['gameCount']}",
                                   value=f"{matches[matchWindowID]['heading']}"
                                         f"Stage:\n"
-                                        f"{matches[matchWindowID]['stages'][0]} {emotes2stage[matches[matchWindowID]['stages'][0]]} \n",
+                                        f"{matches[matchWindowID]['stages'][0]} {context.emotes2stage[matches[matchWindowID]['stages'][0]]} \n",
                                   inline=False
                                   )
             await matchWindowObj.edit(embed=newEmbed)
@@ -1922,15 +1885,15 @@ async def on_message(message):
         # print("message recieved")
         sdgameID = sdplayers[authorID]["sdgameID"]
         if sdgames[sdgameID]["players"][authorID]["selecting"] == True:
-            if content in brawlChara.keys():
+            if content in context.brawlChara.keys():
                 # print("Valid input recognized")
                 await message.delete()
-                if brawlChara[content] not in sdgames[sdgameID]["remaining"]:
+                if context.brawlChara[content] not in sdgames[sdgameID]["remaining"]:
                     return
 
                 sdgames[sdgameID]["players"][authorID]["selecting"] = False
                 sdgameObject = sdgames[sdgameID]["messageObj"]
-                charaIcon = brawlChara[content]
+                charaIcon = context.brawlChara[content]
 
                 sdgames[sdgameID]["remaining"].remove(charaIcon)
                 sdgames[sdgameID]["players"][authorID]["usedCharacters"].append(charaIcon)
@@ -1944,7 +1907,7 @@ async def on_message(message):
                 selectEmbed.set_field_at(index=fieldnum, name=f"{client.get_user(authorID)} {charaIcon}",
                                          value=f"Wins: {sdgames[sdgameID]['players'][authorID]['wins']} 🏆")
                 updatedRoster = sdgameObject.embeds[0]
-                updatedRoster.description = showroster(sdgames[sdgameID]["remaining"], characterlist)
+                updatedRoster.description = showroster(sdgames[sdgameID]["remaining"], context.characterlist)
 
                 await sdgameObject.edit(embed=selectEmbed)
                 await sdgameObject.edit(embed=updatedRoster)
@@ -1977,19 +1940,19 @@ async def on_message(message):
         if matches[matchWindowID]["selections"][authorID] == False:
             return
 
-        if content != "stay" and content not in brawlChara.keys():
+        if content != "stay" and content not in context.brawlChara.keys():
             return
 
         opponent = opponents[authorID]
-        matchchannel = f"<#{matchChannel}>"
+        matchchannel = f"<#{context.matchChannel}>"
 
         # character selection event for game 1
         if matches[matchWindowID]['gameCount'] == 1:
             character = str(message.content.lower().strip())
-            if character not in brawlChara.keys():
+            if character not in context.brawlChara.keys():
                 return
 
-            matches[matchWindowID]["players"][authorID]["character"] = brawlChara[character]
+            matches[matchWindowID]["players"][authorID]["character"] = context.brawlChara[character]
             selectedDM = await message.author.create_dm()
             selectedChara = discord.Embed(title=f"{matches[matchWindowID]['players'][authorID]['character']} selected!",
                                           description=f"Return to matchmaking: Click here -> {matchchannel}",
@@ -2020,10 +1983,10 @@ async def on_message(message):
                                       value=f"{heading}"
                                             f"\n"
                                             f"Waiting for <@{firstStrike}> to strike. (click on the reactions):\n"
-                                            f"{showstagelist(stagelist)}",
+                                            f"{showstagelist(stagelist, context.emotes2stage)}",
                                       inline=False)
                 await matchWindowObj.edit(embed=newEmbed)
-                for icon in stages:
+                for icon in context.stages:
                     await matchWindowObj.add_reaction(icon.strip("<:>"))
 
                 #print("checking for who's banning: ", matches[matchWindowID])
@@ -2032,8 +1995,8 @@ async def on_message(message):
         elif matches[matchWindowID]['gameCount'] >= 2:
             selection = str(message.content.lower().strip())
 
-            if selection in brawlChara.keys():
-                matches[matchWindowID]['players'][authorID]['character'] = brawlChara[selection]
+            if selection in context.brawlChara.keys():
+                matches[matchWindowID]['players'][authorID]['character'] = context.brawlChara[selection]
 
             # elif selection == "stay":
             # print("nothing changes")
@@ -2058,7 +2021,7 @@ async def on_message(message):
                 matches[matchWindowID]["heading"] = f"({p1name}) {chara1} {versus} "
                 # print(matches[matchWindowID]["heading"])  # testing
                 stage = matches[matchWindowID]["stages"][0]
-                stageName = emotes2stage[stage]
+                stageName = context.emotes2stage[stage]
 
                 playerCharacter = matches[matchWindowID]['players'][authorID]['character']
                 gameCount = matches[matchWindowID]['gameCount']
@@ -2090,7 +2053,7 @@ async def on_message(message):
                                       name=f"Game {matches[matchWindowID]['gameCount']}",
                                       value=f"{matches[matchWindowID]['heading']}"
                                             f"Stage:\n"
-                                            f"{matches[matchWindowID]['stages'][0]} {emotes2stage[matches[matchWindowID]['stages'][0]]} \n",
+                                            f"{matches[matchWindowID]['stages'][0]} {context.emotes2stage[matches[matchWindowID]['stages'][0]]} \n",
                                       inline=False
                                       )
                 await matchWindowObj.edit(embed=newEmbed)
