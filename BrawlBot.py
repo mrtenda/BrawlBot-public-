@@ -99,7 +99,7 @@ noDecayListNetp = []
 global noDecayListWifi
 noDecayListWifi = []
 global minGames
-minGames = 3;
+minGames = 3
 
 sets = ["bo3", "bo5", "bo7"]
 
@@ -112,12 +112,12 @@ def remainingstagelist(fullstagelist, dsl):
 
 
 def sdscoreUpdate(title, username, userID, score, selecting):
-    if title == True:
+    if title:
         return username
 
-    elif title == False:
+    elif not title:
         details = f"Wins: {score} 🏆\n\n"
-        if selecting == True:
+        if selecting:
             details += f"waiting for <@{userID}>\nto pick their character...\n(type it in this chat)"
 
         return details
@@ -200,7 +200,7 @@ def ELOCapCheck(playerID, matchType):
     if rankings[matchType][playerID] < 1:
         rankings[matchType][playerID] = 1
     elif rankings[matchType][playerID] > 9999:
-        rankings[matchType][playerID] == 9999
+        rankings[matchType][playerID] = 9999
 
 
 def showELOChange(newELO, oldELO):
@@ -289,7 +289,7 @@ def buildLBoard(rankingList, listType, page, matchType):
         strPlayerID = playerList[startindex + index]
         intPlayerID = int(strPlayerID)
         playerName = client.get_user(intPlayerID)
-        if playerName == None:
+        if playerName is None:
             playerName = f"UserID: {strPlayerID}"
         ELO = round(rankings[listType][intPlayerID])
         standing = startindex + index + 1
@@ -379,15 +379,14 @@ def calculateELO(winnerID, loserID, matchType, endCheck, modCheck, wNeeded):
     returns reward points
     '''
     endMultiplier = 1
-    if endCheck == True:
+    if endCheck:
         if wNeeded == 2:
             endMultiplier = 0.85
         elif wNeeded == 3:
             endMultiplier = 0.7
         elif wNeeded == 4:
             endMultiplier = 0.6
-
-    elif modCheck == True:
+    elif modCheck:
         endMultiplier = 0.5
     winnerRating = rankings[matchType][winnerID]
     loserRating = rankings[matchType][loserID]
@@ -403,11 +402,10 @@ def calculateELO(winnerID, loserID, matchType, endCheck, modCheck, wNeeded):
     score = 1 - (1 / (1 + 10 ** ((loserRating - winnerRating) / 400)))
     multiplier = 36
 
-    if endCheck == True or modCheck == True:
+    if endCheck or modCheck:
         wRewardPoints = round(multiplier * score * wMultiplier * endMultiplier)
         lRewardPoints = round(multiplier * score * lMultiplier * endMultiplier)
-
-    elif endCheck == False:
+    elif not endCheck:
         wRewardPoints = round(multiplier * score * wMultiplier * endMultiplier, 2)
         lRewardPoints = round(multiplier * score * lMultiplier * endMultiplier, 2)
 
@@ -512,7 +510,7 @@ async def decayon(ctx):
     global noDecayListWifi
     #print(f"already played matches wifi: {noDecayListWifi}")
     #print(f"already played matches netp: {noDecayListNetp}")
-    while decay == True:
+    while decay:
 
         decayPeriod = 216000 # 2.5 days
         await asyncio.sleep(decayPeriod)
@@ -628,7 +626,7 @@ async def ironman(ctx):
 async def characters(ctx):
     userID = ctx.message.author.id
     # checks if user is banned
-    if banCheck(userID) == True:
+    if banCheck(userID):
         return
     channelOrigin = ctx.message.channel.id
     # fetch change
@@ -650,7 +648,7 @@ async def ban(ctx):
     # print(playerID)
 
     # checks if player in question is a real person
-    if client.get_user(playerID) == None:
+    if client.get_user(playerID) is None:
         # print("found no one")
         return
 
@@ -682,7 +680,7 @@ async def unban(ctx):
     playerID = int(ctx.message.content[10:-1])
 
     # checks if player in question is a real person
-    if client.get_user(playerID) == None:
+    if client.get_user(playerID) is None:
         return
 
     # checks if player in question is currently banned, otherwise it returns
@@ -745,7 +743,7 @@ async def top(ctx):
         return
 
     # checks if the user is banned
-    if banCheck(ctx.message.author.id) == True:
+    if banCheck(ctx.message.author.id):
         return
 
     topType = ctx.message.content[4:9].upper().strip()
@@ -776,7 +774,7 @@ async def rank(ctx):
 
     authorID = ctx.message.author.id
 
-    if banCheck(authorID) == True:
+    if banCheck(authorID):
         return
 
     if ctx.message.content[6:10].upper() == "NETP" or ctx.message.content[6:10].upper() == "WIFI":
@@ -790,8 +788,6 @@ async def rank(ctx):
         # print("boardType: ", boardType)
         # print("standing: ", standing)
         playerID = findPlayer(boardType, standing)
-
-
     else:
         playerID = ctx.message.content[9:-1]
         # print("ctx:", ctx.message.content)
@@ -863,7 +859,7 @@ async def ranked(ctx):
         await ctx.message.delete()
         await ctx.send(f"This command can only be used in {channels_to_str(context.searchChannels)}", delete_after=10)
         return
-    if banCheck(ctx.message.author.id) == True:
+    if banCheck(ctx.message.author.id):
         return
     # if user is already in a match, they will be unable to queue up a search
     if ctx.message.author.id in players2matches.keys():
@@ -959,7 +955,7 @@ async def on_message_delete(message):
 async def on_reaction_add(reaction, user):
     # print("emote:", reaction.emoji)
 
-    if banCheck(user.id) == True:
+    if banCheck(user.id):
         return
 
     messageID = reaction.message.id
@@ -1234,7 +1230,7 @@ async def on_reaction_add(reaction, user):
             winnerName = str(client.get_user(winner))
             matches[messageID]["players"][winner]["wins"] += 1
             winnerChara = matches[messageID]['players'][winner]['character']
-            if dsl == True:
+            if dsl:
                 dslstage = matches[messageID]['stages']
                 if dslstage[0] not in matches[messageID]['players'][winner]['dsl']:
                     matches[messageID]['players'][winner]['dsl'].append(dslstage[0])
@@ -1252,7 +1248,7 @@ async def on_reaction_add(reaction, user):
             newEmbed.set_thumbnail(url='')
             await matchWindowObj.edit(embed=newEmbed)
             matches[messageID]["gameCount"] += 1
-            if dsl == True:
+            if dsl:
                 #print("dsl enabled")
                 #print("fullstagelist: ", fullstagelist)
                 matches[messageID]["stages"] = remainingstagelist(fullstagelist[:], matches[messageID]['players'][loser]['dsl'])
@@ -1309,7 +1305,7 @@ async def on_reaction_add(reaction, user):
                                       f"{loss} {str(client.get_user(loser))} [{showLoserELO}] {loserChange}",
                                 inline=False)
                 rmWindow = 30
-                embed.set_footer(text= f"Both players can click {rm} to initiate a rematch")
+                embed.set_footer(text=f"Both players can click {rm} to initiate a rematch")
                 winnerAvatar = client.get_user(winner).display_avatar.url
                 embed.set_thumbnail(url=winnerAvatar)
                 await matchWindowObj.unpin()
@@ -1455,7 +1451,7 @@ async def on_reaction_add(reaction, user):
                 # print("user already in match tried to join")
                 return
 
-            if sdgames[reaction.message.id]["closed"] == True:
+            if sdgames[reaction.message.id]["closed"]:
                 return
 
             sdgames[reaction.message.id]["closed"] = True
@@ -1480,7 +1476,7 @@ async def on_reaction_add(reaction, user):
             # print("sdplayers: ", sdplayers)
             # print("sdgames: ", sdgames)
 
-            if sdgames[messageID]["players"][opponent]["selecting"] == True:
+            if sdgames[messageID]["players"][opponent]["selecting"]:
                 selectmessageOpp = f"waiting for <@{opponent}>\nto pick their character...\n(type it in this chat)"
                 selectmessageUsr = ""
             else:
@@ -1561,7 +1557,7 @@ async def on_reaction_add(reaction, user):
                 if sdgames[sdgameID]["winner"] == sdplayers[user.id]["opponent"]:
                     nextgame = True
 
-            if nextgame == True and sdgames[sdgameID]["remaining"] != 0:
+            if nextgame and sdgames[sdgameID]["remaining"] != 0:
                 # print("moving on to the next game")
 
                 sdgameObj = sdplayers[user.id]["messageObj"]
@@ -1653,7 +1649,7 @@ async def on_reaction_add(reaction, user):
 
 @client.event
 async def on_reaction_remove(reaction, user):
-    if banCheck(user.id) == True:
+    if banCheck(user.id):
         return
 
     messageID = reaction.message.id
@@ -1682,7 +1678,7 @@ async def on_raw_reaction_add(payload):
     botID = client.user.id
     # print("payload: ", payload)
 
-    if banCheck(playerID) == True:
+    if banCheck(playerID):
         return
 
     # checks if reaction is on a challenge message
@@ -1874,7 +1870,7 @@ async def on_message(message):
     botID = 837093793722662942
     content = str(message.content.lower().strip())
 
-    if banCheck(authorID) == True:
+    if banCheck(authorID):
         return
 
     # bot ignores it's own messages
@@ -1884,7 +1880,7 @@ async def on_message(message):
     if message.guild in client.guilds and authorID in sdplayers.keys():
         # print("message recieved")
         sdgameID = sdplayers[authorID]["sdgameID"]
-        if sdgames[sdgameID]["players"][authorID]["selecting"] == True:
+        if sdgames[sdgameID]["players"][authorID]["selecting"]:
             if content in context.brawlChara.keys():
                 # print("Valid input recognized")
                 await message.delete()
@@ -1937,7 +1933,7 @@ async def on_message(message):
 
         matchWindowID = players2matches[authorID]
 
-        if matches[matchWindowID]["selections"][authorID] == False:
+        if not matches[matchWindowID]["selections"][authorID]:
             return
 
         if content != "stay" and content not in context.brawlChara.keys():
